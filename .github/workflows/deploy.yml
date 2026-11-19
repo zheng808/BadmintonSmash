@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, develop]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    env:
+      ENV_NAME: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/Smash-GitHubDeploy
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy stacks
+        working-directory: infra
+        run: |
+          npx cdk deploy "Smash-${ENV_NAME}-*" \
+            --require-approval never \
+            -c env="${ENV_NAME}" \
+            -c region="${AWS_REGION}" \
+            -c senderEmail="${{ vars.SENDER_EMAIL }}" \
+            -c alarmEmail="${{ vars.ALARM_EMAIL }}" \
+            ${{ vars.WEB_DOMAIN && format('-c domain={0}', vars.WEB_DOMAIN) || '' }} \
+            ${{ vars.HOSTED_ZONE_ID && format('-c hostedZoneId={0}', vars.HOSTED_ZONE_ID) || '' }} \
+            ${{ vars.CERTIFICATE_ARN && format('-c certificateArn={0}', vars.CERTIFICATE_ARN) || '' }}
+      - name: Pull client env from stack outputs
+        run: scripts/pull-env.sh "${ENV_NAME}"
+      - name: Build and publish web bundle
+        run: scripts/deploy-web.sh "${ENV_NAME}"

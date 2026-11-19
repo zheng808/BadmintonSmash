@@ -1,0 +1,29 @@
+{
+  "name": "badmintonsmash",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Badminton session sign-ups with capped rosters, waitlists and settle-after cost splitting",
+  "workspaces": [
+    "shared",
+    "api",
+    "infra",
+    "client",
+    "web"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "synth": "npm run synth -w infra",
+    "dev:api": "npm run dev -w api",
+    "dev:client": "npm run start -w client",
+    "build:web": "npm run build:web -w client",
+    "dev:web": "npm run dev -w web"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  }
+}

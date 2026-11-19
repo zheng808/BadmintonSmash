@@ -1,0 +1,30 @@
+# deps
+node_modules/
+# builds
+dist/
+build/
+cdk.out/
+.expo/
+web-build/
+*.tsbuildinfo
+# env (per-env client config is generated from stack outputs)
+.env
+.env.*
+!.env.example
+# os / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+# logs
+*.log
+npm-debug.log*
+# tests
+coverage/
+# local dynamodb data
+.dynamodb/
+# eas / native
+client/ios/
+client/android/
+# cdk
+cdk-outputs.json
